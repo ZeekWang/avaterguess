@@ -10,6 +10,14 @@
     var hash = window.location.hash;
     var score = 0;
     var accessToken = "";
+    var answer = -1;
+    var leftTime = 10;
+    var answerTimer;
+    var askedList = [];
+    var lastImgSrc = "";
+    var target_i;
+    var leftQuestion = 20;
+    //var 
     if(hash != "") {
         accessToken = window.location.hash.match(/oauth_token=([^\&]+)/)[1];
         if (accessToken == "")
@@ -109,41 +117,108 @@
     }
 
     function ask() {
-        var target_i = Math.floor(Math.random() * friendList.length);
+        if (leftQuestion == 0){
+            alert("您对好友的熟悉程度为：" + score + "分");
+            return;
+        }
+        leftQuestion--;
+        $("#leftquestion-text").text(leftQuestion);
+
+        initLeftTime();
+        target_i = Math.floor(Math.random() * friendList.length);
+        while (askedList.indexOf(target_i) >= 0) {
+            target_i = Math.floor(Math.random() * friendList.length)
+        }
+        askedList.push(target_i);
+        console.log(target_i);
+
         var target = friendList[target_i];
-        $("#avater").attr("src", target.avatar_large);
-        var optionList = [-1,-1,-1,-1];
-        for (var i = 0; i < 4; i++) {
-            while(true) {
-                optionList[i] = Math.floor(Math.random() * friendList.length);
-                var isOk = true;
-                for (var j = 0; j < i; j++) {
-                    if (optionList[i] == optionList[j])
-                        isOk = false;
+        $("#avater").remove();
+        $("#avater_div").append(
+            "<img id='avater' src='"+ target.avatar_large +　"' onload='imageLoaded();'/>"
+        );
+        
+    }
+
+    function imageLoaded() {
+        if ($("#avater").attr("src") != lastImgSrc){
+            console.log("loaded");
+            lastImgSrc = $("#avater").attr("src")
+        
+            var optionList = [-1,-1,-1,-1];
+            for (var i = 0; i < 4; i++) {
+                while(true) {
+                    optionList[i] = Math.floor(Math.random() * friendList.length);
+                    var isOk = true;
+                    for (var j = 0; j < i; j++) {
+                        if (optionList[i] == optionList[j])
+                            isOk = false;
+                    }
+                    if (isOk ==  true)
+                        break;
                 }
-                if (isOk ==  true)
-                    break;
             }
+            answer = Math.floor(Math.random() * 4);
+            optionList[answer] = target_i;
+            for (var i = 0; i < 4; i++) {
+                
+                $("#option" + i + "-text").text(friendList[optionList[i]].name);
+            }
+            answerTimer = setInterval(
+                function() {
+                    leftTime -= 1;
+                    $("#leftTime-text").text(leftTime);
+                    if (leftTime == 0)
+                        next();
+                }, 1000
+            );
+
         }
-        optionList[Math.floor(Math.random() * 4)] = target_i;
+    }
+
+    function next() {
+        clearInterval(answerTimer);
+        if ($("#option" + answer).attr("checked") == "checked")  {
+            var tpScore = (leftTime + 1) > 5 ? 5 : leftTime + 1;
+            score += tpScore;
+            $("#score-text").text(score);
+        }
         for (var i = 0; i < 4; i++) {
-            console.log(friendList[optionList[i]].name);
-            $("#option" + i).text(friendList[optionList[i]].name);
+            $("#option" + i).attr("checked", null);
         }
-        //$("")
+        
+        ask();
+    }
+
+    function initLeftTime() {
+        leftTime = 10;
+        $("#leftTime-text").text(leftTime);
     }
 </script>
 </head>
 
 
 <body>
-    <div id="avater_div"><img id="avater" scr=""></img></div>
-    <div id="options_div">
-        <span id="option0" class="option_list"></span>
-        <span id="option1" class="option_list"></span>
-        <span id="option2" class="option_list"></span>
-        <span id="option3" class="option_list"></span>
+    <div id="avater_div"><img id="avater" scr="">
+
     </div>
+    <div id="options_div">
+        <input type="radio" id="option0" name="option"/>
+        <span id="option0-text"></span><br />
+        <input type="radio" id="option1" name="option"/>
+        <span id="option1-text"></span><br />
+        <input type="radio" id="option2" name="option"/>
+        <span id="option2-text"></span><br />
+        <input type="radio" id="option3" name="option"/>
+        <span id="option3-text"></span><br />
+        <button id="next" onclick="next()">下一个</button>
+    </div>
+
+    </br>
+    <h2>剩余时间:<span id="leftTime-text"></span></h2>
+    <h2>得分:<span id="score-text"></span></h2>
+    <h2>剩余题数:<span id="leftquestion-text"></span></h2>
+
 </body>
 
 
