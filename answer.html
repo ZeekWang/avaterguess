@@ -69,7 +69,14 @@
     			
     			console.log(pageCount);
     			getFriends(1);
-                ask();
+                pollTimer = setInterval(
+                    function(){
+                        if (friendList.length > 0) {
+                            clearInterval(pollTimer);
+                            ask();
+                        }
+                    }, 500);
+                
        		},
        		args
     	);
@@ -102,21 +109,40 @@
     }
 
     function ask() {
-        var i = Math.floor(Math.random() * friendList.length);
-        var target = friendList[i];
-        //$("#avater").attr(src, target.)
+        var target_i = Math.floor(Math.random() * friendList.length);
+        var target = friendList[target_i];
+        $("#avater").attr("src", target.avatar_large);
+        var optionList = [-1,-1,-1,-1];
+        for (var i = 0; i < 4; i++) {
+            while(true) {
+                optionList[i] = Math.floor(Math.random() * friendList.length);
+                var isOk = true;
+                for (var j = 0; j < i; j++) {
+                    if (optionList[i] == optionList[j])
+                        isOk = false;
+                }
+                if (isOk ==  true)
+                    break;
+            }
+        }
+        optionList[Math.floor(Math.random() * 4)] = target_i;
+        for (var i = 0; i < 4; i++) {
+            console.log(friendList[optionList[i]].name);
+            $("#option" + i).text(friendList[optionList[i]].name);
+        }
+        //$("")
     }
 </script>
 </head>
-<script type="text/javascript">
+
 
 <body>
     <div id="avater_div"><img id="avater" scr=""></img></div>
-    <div id="options">
+    <div id="options_div">
+        <span id="option0" class="option_list"></span>
         <span id="option1" class="option_list"></span>
         <span id="option2" class="option_list"></span>
         <span id="option3" class="option_list"></span>
-        <span id="option4" class="option_list"></span>
     </div>
 </body>
 
